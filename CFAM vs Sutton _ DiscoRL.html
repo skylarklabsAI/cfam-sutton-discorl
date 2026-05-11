@@ -81,6 +81,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       // cropping. Width stays at 1920; everything scales proportionally.
       template = template.replace(/<deck-stage([^>]*?)height="\d+"/, '<deck-stage$1height="1300"');
 
+      // Slide 2 eyebrow → TASK · Bottle pickup
+      template = template.replace(
+        '<div class="eyebrow">Concrete Example · Manipulation</div>',
+        '<div class="eyebrow">TASK · Bottle pickup</div>'
+      );
+
       // Loosen slide 1 table rows and slide 2 rail steps for readability.
       const rowSpacingOverride =
         '<style id="__local_row_spacing">' +
@@ -95,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       // end-to-end pipeline (gold), followed by the two generalization clips.
       const slide3Inner =
         '<div class="topbar">' +
-          '<div class="eyebrow">Few-Shot Task Learning &amp; Execution</div>' +
+          '<div class="eyebrow">TASK · Bottle pickup</div>' +
           '<div class="brand"><span class="dot"></span>Skylark Labs</div>' +
         '</div>' +
         '<div class="title-block" style="margin-bottom:12px;">' +
