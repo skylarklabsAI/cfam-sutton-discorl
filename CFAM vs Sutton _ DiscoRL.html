@@ -87,6 +87,29 @@ document.addEventListener('DOMContentLoaded', async function() {
         '<div class="eyebrow">TASK · Bottle pickup</div>'
       );
 
+      // Slide 2 title → spell the task out explicitly
+      template = template.replace(
+        '<h1>How each method runs the bottle task</h1>',
+        '<h1>How each method runs the bottle task <span style="color:var(--gold);font-weight:600;">— approach &amp; grab the bottle</span></h1>'
+      );
+
+      // Slide 2: drop a small end-to-end clip in the top-right corner so the
+      // viewer sees what "approach + grab" actually looks like while reading
+      // the three rails. Absolute-positioned inside .slide (which is itself
+      // position:absolute;inset:0).
+      const slide2VideoBlock =
+        '<div style="position:absolute;top:18px;right:80px;width:340px;z-index:5;pointer-events:auto;">' +
+          '<div style="font:600 10px/1 \'JetBrains Mono\',ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--slate-soft);margin-bottom:6px;text-align:right;">End-to-end · CFAM</div>' +
+          '<div class="media gold" style="position:relative;border-radius:6px;overflow:hidden;aspect-ratio:16/9;">' +
+            '<video src="' + encodeURIComponent('end-to-end.mp4') + '" autoplay muted loop playsinline controls preload="auto" style="' + mediaFitStyle + '"></video>' +
+            '<div class="tag" style="font-size:10px;padding:3px 6px;">End-to-end</div>' +
+          '</div>' +
+        '</div>';
+      template = template.replace(
+        /(<section data-screen-label="02 Bottle task">\s*<div class="slide">)/,
+        '$1' + slide2VideoBlock
+      );
+
       // Loosen slide 1 table rows and slide 2 rail steps for readability.
       const rowSpacingOverride =
         '<style id="__local_row_spacing">' +
