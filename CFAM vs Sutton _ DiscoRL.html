@@ -81,10 +81,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       // cropping. Width stays at 1920; everything scales proportionally.
       template = template.replace(/<deck-stage([^>]*?)height="\d+"/, '<deck-stage$1height="1300"');
 
-      // Replace the entire slide 3 body with a 4+2 layout: end-to-end (full
-      // pipeline) leads the top row, followed by the three component skills;
-      // the two generalization clips fill row 2 at half-width each so they're
-      // larger and never get clipped.
+      // 3+3 layout: row 1 holds the three taught skills; row 2 leads with the
+      // end-to-end pipeline (gold), followed by the two generalization clips.
       const slide3Inner =
         '<div class="topbar">' +
           '<div class="eyebrow">Few-Shot Task Learning &amp; Execution</div>' +
@@ -94,26 +92,24 @@ document.addEventListener('DOMContentLoaded', async function() {
           '<h1>CFAM in the field — one demonstration, three skills, robust generalization</h1>' +
           '<p class="lede">A single seed demo teaches <span class="k-cfam">Approach · Align · Grasp</span>; the same competence capsule then chains end-to-end and generalizes across occlusion and pose changes.</p>' +
         '</div>' +
-        '<div class="paradigm-strip">' +
-          '<div class="pchip"><div class="sw sutton"></div><div class="nm">Sutton — slow trial &amp; error</div></div>' +
-          '<div class="pchip"><div class="sw silver"></div><div class="nm">Silver — better recipe across tries</div></div>' +
+        '<div class="paradigm-strip" style="grid-template-columns:1fr;">' +
           '<div class="pchip cfam"><div class="sw cfam"></div><div class="nm">CFAM — one-shot, oracle-validated</div></div>' +
         '</div>' +
         '<div style="display:grid;grid-template-rows:1fr 1fr;gap:14px;flex:1;min-height:0;">' +
-          // Row 1: End-to-end (gold) + 3 component skills (gold)
+          // Row 1: three component skills (gold)
           '<div>' +
-            '<div class="s3-row-label"><span>End-to-End Pipeline · Skills Learned</span><span class="hint">full pipeline running on-device, plus the three component skills it composes</span><span class="line"></span></div>' +
-            '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:10px;height:calc(100% - 38px);">' +
-              videoMedia('End-to-end', 'end-to-end.mp4', 'End-to-end.', 'Approach → Align → Grasp running as one validated pipeline on-device.', true) +
+            '<div class="s3-row-label"><span>Skills Learned · Few-Shot</span><span class="hint">one seed demonstration, three reusable skills</span><span class="line"></span></div>' +
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;height:calc(100% - 38px);">' +
               videoMedia('01 · Approach', 'approach.mp4', 'Approach.', 'Seed trajectory warped to current bottle pose; pre-grasp posture stabilized.', true) +
               videoMedia('02 · Align', 'align.mp4', 'Align.', 'Wrist rotates to grasp axis; geometric loss minimized.', true) +
               videoMedia('03 · Grasp', 'grasp.mp4', 'Grasp.', 'Contact-aware closure; oracle validates before motion.', true) +
             '</div>' +
           '</div>' +
-          // Row 2: Generalization (Occlusion / Height) at half width — bigger
+          // Row 2: End-to-end (gold) leads, then Generalization
           '<div>' +
-            '<div class="s3-row-label"><span>Generalization</span><span class="hint">same capsule, varied conditions</span><span class="line"></span></div>' +
-            '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:10px;height:calc(100% - 38px);">' +
+            '<div class="s3-row-label"><span>End-to-End &amp; Generalization</span><span class="hint">full pipeline on-device · same capsule, varied conditions</span><span class="line"></span></div>' +
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;height:calc(100% - 38px);">' +
+              videoMedia('End-to-end', 'end-to-end.mp4', 'End-to-end.', 'Approach → Align → Grasp running as one validated pipeline on-device.', true) +
               videoMedia('Occlusion', 'Occlusion.mp4', 'Occlusion.', 'Partial visibility; oracle re-validates before commit.', false) +
               videoMedia('Height', 'height.mp4', 'Height.', 'Bottle at varied heights; skill warps to the new pose without retraining.', false) +
             '</div>' +
