@@ -81,6 +81,13 @@ document.addEventListener('DOMContentLoaded', async function() {
       // cropping. Width stays at 1920; everything scales proportionally.
       template = template.replace(/<deck-stage([^>]*?)height="\d+"/, '<deck-stage$1height="1300"');
 
+      // Global rename: 'one-shot' → 'few-shot' (slides 4-5 are built using
+      // few-shot adaptation, so the deck should be consistent). Preserves
+      // capitalization of the original.
+      template = template.replace(/one-shot/g, 'few-shot')
+                         .replace(/One-shot/g, 'Few-shot')
+                         .replace(/ONE-SHOT/g, 'FEW-SHOT');
+
       // Slide 2 eyebrow → TASK · Bottle pickup
       template = template.replace(
         '<div class="eyebrow">Concrete Example · Manipulation</div>',
@@ -168,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           '<p class="lede">A single seed demo teaches <span class="k-cfam">Approach · Align · Grasp</span>; the same competence capsule then chains end-to-end and generalizes across occlusion and pose changes.</p>' +
         '</div>' +
         '<div class="paradigm-strip" style="grid-template-columns:1fr;">' +
-          '<div class="pchip cfam"><div class="sw cfam"></div><div class="nm">CFAM — one-shot, oracle-validated</div></div>' +
+          '<div class="pchip cfam"><div class="sw cfam"></div><div class="nm">CFAM — few-shot, oracle-validated</div></div>' +
         '</div>' +
         '<div style="display:grid;grid-template-rows:1fr 1fr;gap:14px;flex:1;min-height:0;">' +
           // Row 1: three component skills (gold)
