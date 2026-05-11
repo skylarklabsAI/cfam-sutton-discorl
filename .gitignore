@@ -1,6 +1,11 @@
 skylark-march-update-v6-batch1.html
 memory/
 .claude/
+.orig_videos/
+__test_*.js
+__chrome_profile/
+node_modules/
+package*.json
 *.zip
 .DS_Store
 Thumbs.db
