@@ -81,87 +81,20 @@ document.addEventListener('DOMContentLoaded', async function() {
       // cropping. Width stays at 1920; everything scales proportionally.
       template = template.replace(/<deck-stage([^>]*?)height="\d+"/, '<deck-stage$1height="1300"');
 
-      // Global rename: 'one-shot' → 'few-shot' (slides 4-5 are built using
-      // few-shot adaptation, so the deck should be consistent). Preserves
-      // capitalization of the original.
-      template = template.replace(/one-shot/g, 'few-shot')
-                         .replace(/One-shot/g, 'Few-shot')
-                         .replace(/ONE-SHOT/g, 'FEW-SHOT');
-
-      // Slide 2 eyebrow → TASK · Bottle pickup
-      template = template.replace(
-        '<div class="eyebrow">Concrete Example · Manipulation</div>',
-        '<div class="eyebrow">TASK · Bottle pickup</div>'
-      );
-
-      // Slide 2 title → spell the task out explicitly
-      template = template.replace(
-        '<h1>How each method runs the bottle task</h1>',
-        '<h1>How each method runs the bottle task <span style="color:var(--gold);font-weight:600;">— approach &amp; grab the bottle</span></h1>'
-      );
-
-      // Slide 2: drop a small end-to-end clip in the top-right corner so the
-      // viewer sees what "approach + grab" actually looks like while reading
-      // the three rails. Absolute-positioned inside .slide (which is itself
-      // position:absolute;inset:0).
-      const slide2VideoBlock =
-        '<div style="position:absolute;top:18px;right:80px;width:340px;z-index:5;pointer-events:auto;">' +
-          '<div style="font:600 10px/1 \'JetBrains Mono\',ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--slate-soft);margin-bottom:6px;text-align:right;">End-to-end · CFAM</div>' +
-          '<div class="media gold" style="position:relative;border-radius:6px;overflow:hidden;aspect-ratio:16/9;">' +
-            '<video src="' + encodeURIComponent('end-to-end.mp4') + '" autoplay muted loop playsinline controls preload="auto" style="' + mediaFitStyle + '"></video>' +
-            '<div class="tag" style="font-size:10px;padding:3px 6px;">End-to-end</div>' +
-          '</div>' +
-        '</div>';
-      template = template.replace(
-        /(<section data-screen-label="02 Bottle task">\s*<div class="slide">)/,
-        '$1' + slide2VideoBlock
-      );
-
       // Loosen slide 1 table rows and slide 2 rail steps for readability.
+      // Also collapse the comparison from 3 paradigms → 2 (Traditional RL vs CFAM),
+      // so .columns / .ctable / .rails grids are forced to 2 data columns.
       const rowSpacingOverride =
         '<style id="__local_row_spacing">' +
-          '.ctable .h, .ctable .c { padding: 14px 20px; line-height: 1.5; }' +
+          '.columns { grid-template-columns: repeat(2, 1fr) !important; }' +
+          '.ctable { grid-template-columns: 200px repeat(2, 1fr) !important; }' +
+          '.rails { grid-template-columns: repeat(2, 1fr) !important; }' +
+          '.ctable .h, .ctable .c { padding: 12px 18px; line-height: 1.45; }' +
           '.rail { padding: 24px 24px 24px; gap: 16px; }' +
           '.rail .step { padding: 14px 0; gap: 16px; }' +
           '.rail .step:first-of-type { padding-top: 4px; }' +
         '</style>';
       template = template.replace(/<\/head>/i, rowSpacingOverride + '</head>');
-
-      // Load KaTeX for crisp math rendering of the CFAM objective equation.
-      // The bundler re-creates every <script> tag and overrides their onload
-      // handlers, so we cannot rely on auto-render's `onload=` attribute.
-      // Instead, after the two external scripts (which the bundler awaits in
-      // order), drop a tiny inline <script> that calls renderMathInElement
-      // directly — by then both KaTeX and auto-render have executed.
-      const katexLoad =
-        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">' +
-        '<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></' + 'script>' +
-        '<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></' + 'script>' +
-        '<script>(function(){' +
-          'function render(){if(window.renderMathInElement){' +
-            'window.renderMathInElement(document.body,{' +
-              'delimiters:[{left:"$$",right:"$$",display:true},{left:"\\\\(",right:"\\\\)",display:false}],' +
-              'throwOnError:false' +
-            '});' +
-          '}else{setTimeout(render,100);}}' +
-          'if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",render);else render();' +
-        '})();</' + 'script>';
-      template = template.replace(/<\/head>/i, katexLoad + '</head>');
-
-      // Slide 1: insert the CFAM Objective equation as a banner at the BOTTOM
-      // of the slide — between the comparison table and the footer.
-      const cfamEqBanner =
-        '<div class="cfam-eq-banner" style="background:var(--gold-soft);border:1px solid #EBD6A8;border-radius:8px;padding:14px 22px;margin:14px 0 0 0;display:flex;align-items:center;gap:18px;">' +
-          '<div style="flex-shrink:0;font-family:\'JetBrains Mono\',ui-monospace,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;line-height:1.3;">CFAM<br>Objective</div>' +
-          '<div style="flex:1;min-width:0;font-size:17px;color:var(--ink);overflow-x:auto;">' +
-            '$$\\min_{\\mathcal{F}}\\ \\mathbb{E}\\!\\left[\\sum_{t=0}^{T}\\big\\|\\mathbf{a}_{\\text{base}}(o_t)+\\operatorname{BLEND}(\\mathcal{F},o_t)-\\mathbf{a}_t^{\\text{sup}}\\big\\|^{2}\\right]\\ \\ \\text{s.t.}\\ |\\mathcal{F}|\\le N,\\ O(d)\\ \\text{per step},\\ \\theta\\ \\text{fixed}$$' +
-          '</div>' +
-        '</div>';
-      // Insert the banner immediately before slide 1's <div class="footer">.
-      template = template.replace(
-        /(<section data-screen-label="01 Three paradigms">[\s\S]*?)(\s*<div class="footer">)/,
-        '$1' + cfamEqBanner + '$2'
-      );
 
       // 3+3 layout: row 1 holds the three taught skills; row 2 leads with the
       // end-to-end pipeline (gold), followed by the two generalization clips.
@@ -192,13 +125,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             '<div class="s3-row-label"><span>End-to-End &amp; Generalization</span><span class="hint">full pipeline on-device · same capsule, varied conditions</span><span class="line"></span></div>' +
             '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;height:calc(100% - 38px);">' +
               videoMedia('End-to-end', 'end-to-end.mp4', 'End-to-end.', 'Approach → Align → Grasp running as one validated pipeline on-device.', true) +
-              videoMedia('Occlusion', 'Occlusion.mp4', 'Occlusion.', 'Partial visibility; oracle re-validates before commit.', false) +
-              videoMedia('Height', 'height.mp4', 'Height.', 'Bottle at varied heights; skill warps to the new pose without retraining.', false) +
+              videoMedia('Occlusion · reasoning override', 'Occlusion.mp4', 'Occlusion · reasoning override.', 'Reasoning model intervenes when the physics-aware warp can\'t recover the pose; oracle re-validates before commit.', false) +
+              videoMedia('Height · physics-aware warp', 'height.mp4', 'Height · physics-aware warp.', 'Base function alone handles pose / scale / height variation: keypoint graph re-deformed to the live point cloud, no reasoning step needed.', false) +
             '</div>' +
           '</div>' +
         '</div>' +
         '<div class="footer">' +
-          '<div>CFAM vs Sutton · DiscoRL</div>' +
+          '<div>CFAM vs Traditional RL</div>' +
           '<div class="right">' +
             '<span>Few-shot task learning &amp; execution</span>' +
             '<span class="pip"><i></i><i></i><i class="on"></i><i></i><i></i></span>' +
@@ -220,15 +153,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         /(<section data-screen-label="03 Few-shot task learning">\s*<div class="slide">)[\s\S]*?(<\/div>\s*<\/section>)/,
         '$1' + slide3Inner + '$2'
       );
-
-      // Footer counters: "01 / 03" → "01 / 05", etc.
-      template = template.replace(/(<span>0[123]) \/ 03(<\/span>)/g, '$1 / 05$2');
-
-      // Pip indicators: extend 3 dots to 5, preserving which is active.
-      template = template
-        .replace('<i class="on"></i><i></i><i></i>', '<i class="on"></i><i></i><i></i><i></i><i></i>')
-        .replace('<i></i><i class="on"></i><i></i>', '<i></i><i class="on"></i><i></i><i></i><i></i>')
-        .replace('<i></i><i></i><i class="on"></i>', '<i></i><i></i><i class="on"></i><i></i><i></i>');
 
       // ------- Custom card helpers for application slides -------
       function appCard(tag, gifUrl, captionStrong, captionRest, classified) {
@@ -303,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             '</div>' +
             groundContent +
             '<div class="footer">' +
-              '<div>CFAM vs Sutton · DiscoRL</div>' +
+              '<div>CFAM vs Traditional RL</div>' +
               '<div class="right">' +
                 '<span>Applications · Ground</span>' +
                 '<span class="pip"><i></i><i></i><i></i><i class="on"></i><i></i></span>' +
@@ -337,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             '</div>' +
             airContent +
             '<div class="footer">' +
-              '<div>CFAM vs Sutton · DiscoRL</div>' +
+              '<div>CFAM vs Traditional RL</div>' +
               '<div class="right">' +
                 '<span>Applications · Air</span>' +
                 '<span class="pip"><i></i><i></i><i></i><i></i><i class="on"></i></span>' +
@@ -374,6 +298,191 @@ document.addEventListener('DOMContentLoaded', async function() {
           '}' +
           'if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();' +
         '})();<\/script>';
+
+      // ====================================================================
+      // FINAL PASS: collapse Sutton + DiscoRL into a single Traditional RL
+      // column. This rewrites Slide 1 (comparison table) and Slide 2 (rails)
+      // from scratch, so it intentionally supersedes the earlier per-cell
+      // edits above — those edits remain harmless (their match strings won't
+      // appear in the new content, so they no-op).
+      // ====================================================================
+
+      // Deck title
+      template = template.replace(
+        '<title>CFAM vs Sutton &amp; DiscoRL</title>',
+        '<title>CFAM vs Traditional RL</title>'
+      );
+
+      // Shared column-head HTML for the two paradigms.
+      const colHeads2 =
+        '<div class="columns">' +
+          '<div class="col-head">' +
+            '<div class="swatch sutton"></div>' +
+            '<div class="meta">' +
+              '<div class="name">Traditional RL <em>— Sutton / DiscoRL</em></div>' +
+              '<div class="tag">End-to-end trial-and-error · meta-learned recipes</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="col-head cfam">' +
+            '<div class="swatch cfam"></div>' +
+            '<div class="meta">' +
+              '<div class="name">Skylark <em>— CFAM</em></div>' +
+              '<div class="tag">Few-shot oracle-validated field adaptation</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      // Plain-English summary banner (rebuilt here so we can bake it into the
+      // new Slide 1 content; supersedes the earlier banner insertion).
+      const plainEnglishBanner =
+        '<div class="cfam-eq-banner" style="background:var(--gold-soft);border:1px solid #EBD6A8;border-radius:8px;padding:16px 22px;margin:14px 0 0 0;display:flex;align-items:flex-start;gap:20px;">' +
+          '<div style="flex-shrink:0;font-family:\'JetBrains Mono\',ui-monospace,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;line-height:1.3;padding-top:2px;">In plain<br>English</div>' +
+          '<div style="flex:1;min-width:0;font-family:\'Source Serif 4\',Georgia,serif;font-size:17px;line-height:1.5;color:var(--ink);">' +
+            'A task is given in plain language. The robot already knows a library of skills — a reasoning model picks which ones to chain, and each is bent to fit the current scene before the robot moves. ' +
+            '<strong>Traditional RL doesn\'t do this:</strong> it figures out every action step by step, and only learns it was wrong after it fails. ' +
+            'We check the plan first, patch small misses with simple signals (distance, angle, force), and call a <strong>VLM</strong> to invent any skill that\'s missing.' +
+          '</div>' +
+        '</div>';
+
+      // ---- Slide 1: full inner rewrite (Traditional RL vs CFAM) ----
+      const slide1Inner =
+        '<div class="topbar">' +
+          '<div class="eyebrow">Physical AI · Learning Paradigms</div>' +
+          '<div class="brand"><span class="dot"></span>Skylark Labs</div>' +
+        '</div>' +
+        '<div class="title-block">' +
+          '<h1>Two paradigms for learning in physical AI</h1>' +
+          '<p class="lede">' +
+            '<span class="k-sutton">Traditional RL</span> (Sutton-style continual RL, DiscoRL meta-learned recipes) learns end-to-end through trial-and-error reward over many trials. ' +
+            '<span class="k-cfam">CFAM</span> learns reusable physical competence through few-shot, oracle-validated skill adaptation.' +
+          '</p>' +
+        '</div>' +
+        colHeads2 +
+        '<div class="ctable">' +
+          '<div class="h">What it learns</div>' +
+          '<div class="c">How to act — a policy (or a better recipe for learning a policy)</div>' +
+          '<div class="c cfam">Reusable physical skills, in the field</div>' +
+
+          '<div class="h">Architecture</div>' +
+          '<div class="c">End-to-end RL — perception, policy, value, model (or end-to-end supervised by meta-net targets)</div>' +
+          '<div class="c cfam">Brain-inspired hybrid semi-supervised — sensor · language · action (540M params)</div>' +
+
+          '<div class="h">Loss function</div>' +
+          '<div class="c">TD / value / policy / model error (or KL to meta-net targets)</div>' +
+          '<div class="c cfam">Composable visual + geometric skill loss</div>' +
+
+          '<div class="h">Learning rule</div>' +
+          '<div class="c">Iterative gradient over transitions (sometimes a meta-gradient on the rule itself)</div>' +
+          '<div class="c cfam">Localized BCM-type updates — few-step, stored as capsule</div>' +
+
+          '<div class="h">Learning signal</div>' +
+          '<div class="c">Trial-and-error reward (possibly distilled)</div>' +
+          '<div class="c cfam">Sensor truth + visual oracle</div>' +
+
+          '<div class="h">Planning</div>' +
+          '<div class="c">Over states and actions (or none — end-to-end policy)</div>' +
+          '<div class="c cfam">Over skills, not individual steps</div>' +
+
+          '<div class="h">Similar-task learning</div>' +
+          '<div class="c">Slow — retrain or fine-tune (faster with meta-learning, still iterative)</div>' +
+          '<div class="c cfam">Few-shot — transform the seed skill</div>' +
+
+          '<div class="h">Novel-task learning</div>' +
+          '<div class="c">Long retraining, or broad meta-training</div>' +
+          '<div class="c cfam">VLM proposes new skill; language → action tokens → trajectory</div>' +
+
+          '<div class="h">Runtime per decision</div>' +
+          '<div class="c">Per-step image → action loop</div>' +
+          '<div class="c cfam">One forward pass per skill (Approach / Align / Grasp)</div>' +
+
+          '<div class="h">Compute needed</div>' +
+          '<div class="c">High — many GPUs, long runs (very high for meta-training fleets)</div>' +
+          '<div class="c cfam">Low — on-device, no retraining</div>' +
+
+          '<div class="h">Time to learn</div>' +
+          '<div class="c">Days to weeks per task</div>' +
+          '<div class="c cfam">Seconds — single demonstration</div>' +
+
+          '<div class="h row-last">Validation</div>' +
+          '<div class="c row-last">After acting, via reward / performance</div>' +
+          '<div class="c cfam row-last">Before acting (oracle); after failure, local signals: centroid distance · wrist alignment · contact force</div>' +
+        '</div>' +
+        plainEnglishBanner +
+        '<div class="footer">' +
+          '<div>CFAM vs Traditional RL</div>' +
+          '<div class="right">' +
+            '<span>Architecture &amp; approach</span>' +
+            '<span class="pip"><i class="on"></i><i></i><i></i><i></i><i></i></span>' +
+            '<span>01 / 05</span>' +
+          '</div>' +
+        '</div>';
+
+      template = template.replace(
+        /(<section data-screen-label="01 Three paradigms">\s*<div class="slide">)[\s\S]*?(<\/div>\s*<\/section>)/,
+        '$1' + slide1Inner + '$2'
+      );
+
+      // ---- Slide 2: full inner rewrite (one rail per paradigm) ----
+      const slide2VideoCorner =
+        '<div style="position:absolute;top:18px;right:80px;width:340px;z-index:5;pointer-events:auto;">' +
+          '<div style="font:600 10px/1 \'JetBrains Mono\',ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--slate-soft);margin-bottom:6px;text-align:right;">End-to-end · CFAM</div>' +
+          '<div class="media gold" style="position:relative;border-radius:6px;overflow:hidden;aspect-ratio:16/9;">' +
+            '<video src="' + encodeURIComponent('end-to-end.mp4') + '" autoplay muted loop playsinline controls preload="auto" style="' + mediaFitStyle + '"></video>' +
+            '<div class="tag" style="font-size:10px;padding:3px 6px;">End-to-end</div>' +
+          '</div>' +
+        '</div>';
+
+      const tradRailSteps =
+        '<div class="step"><div class="n">01</div><div><div class="label">Task given (as reward)</div><div class="desc">Task is encoded as a reward function once, at design time; the agent never sees it as language.</div></div></div>' +
+        '<div class="step"><div class="n">02</div><div><div class="label">Observe scene</div><div class="desc">Sensor feed → state estimate (bottle, hand, table).</div></div></div>' +
+        '<div class="step"><div class="n">03</div><div><div class="label">Pick an action</div><div class="desc">Policy proposes a motor command from current state (or meta-net predicts π, value, predictions).</div></div></div>' +
+        '<div class="step"><div class="n">04</div><div><div class="label">Predict / plan</div><div class="desc">World model imagines outcomes; rollouts scored by value function.</div></div></div>' +
+        '<div class="step"><div class="n">05</div><div><div class="label">Execute</div><div class="desc">Robot moves; bottle is grasped or knocked over.</div><div class="annot">→ reward</div></div></div>' +
+        '<div class="step"><div class="n">06</div><div><div class="label">Score reward</div><div class="desc">Environment returns scalar reward (sometimes distilled into meta-net targets).</div></div></div>' +
+        '<div class="step"><div class="n">07</div><div><div class="label">Update everything</div><div class="desc">Policy / value / model nudged via gradient; meta-gradient may also update the update-rule itself.</div></div></div>' +
+        '<div class="closer"><span class="glyph">↻</span> Repeat thousands to millions of times</div>';
+
+      const cfamRailSteps =
+        '<div class="step"><div class="n">01</div><div><div class="label">Task given</div><div class="desc">Operator gives the task in language — e.g. "approach &amp; grab the bottle."</div></div></div>' +
+        '<div class="step"><div class="n">02</div><div><div class="label">Decompose into skills</div><div class="desc">Reasoning model decomposes the task using the skill library: Approach → Align → Grasp. <strong>If a needed skill is missing,</strong> a VLM invents it — language tokens → action tokens → new seed.</div></div></div>' +
+        '<div class="step"><div class="n">03</div><div><div class="label">Warp seeds to current scene</div><div class="desc">Diffusion-graph keypoint transform bends each seed trajectory over the live 3D point cloud (RGB + depth) to the current bottle pose.</div></div></div>' +
+        '<div class="step"><div class="n">04</div><div><div class="label">Oracle validates</div><div class="desc">BEFORE motion: does the warped plan satisfy safety + success?</div><div class="annot">→ if valid</div></div></div>' +
+        '<div class="step"><div class="n">05</div><div><div class="label">Execute</div><div class="desc">Robot runs the validated skill sequence on the actual bottle.</div></div></div>' +
+        '<div class="step"><div class="n">06</div><div><div class="label">Correct if not perfect</div><div class="desc">On imperfect execution, patch with local signals — centroid distance · wrist alignment · contact force — and store as a competence capsule.</div></div></div>' +
+        '<div class="closer"><span class="glyph">✓</span> Few-shot — done</div>';
+
+      const slide2Inner =
+        slide2VideoCorner +
+        '<div class="topbar">' +
+          '<div class="eyebrow">TASK · Bottle pickup</div>' +
+          '<div class="brand"><span class="dot"></span>Skylark Labs</div>' +
+        '</div>' +
+        '<div class="title-block">' +
+          '<h1>How each method runs the bottle task <span style="color:var(--gold);font-weight:600;">— approach &amp; grab the bottle</span></h1>' +
+          '<p class="lede">' +
+            'Same task — Approach → Align → Grasp. ' +
+            '<span class="k-sutton">Traditional RL</span> tries and slowly improves; ' +
+            '<span class="k-cfam">CFAM</span> reuses taught skills, validates before acting, patches gaps on-device.' +
+          '</p>' +
+        '</div>' +
+        colHeads2 +
+        '<div class="rails">' +
+          '<div class="rail">' + tradRailSteps + '</div>' +
+          '<div class="rail cfam">' + cfamRailSteps + '</div>' +
+        '</div>' +
+        '<div class="footer">' +
+          '<div>CFAM vs Traditional RL</div>' +
+          '<div class="right">' +
+            '<span>How it actually runs</span>' +
+            '<span class="pip"><i></i><i class="on"></i><i></i><i></i><i></i></span>' +
+            '<span>02 / 05</span>' +
+          '</div>' +
+        '</div>';
+
+      template = template.replace(
+        /(<section data-screen-label="02 Bottle task">\s*<div class="slide">)[\s\S]*?(<\/div>\s*<\/section>)/,
+        '$1' + slide2Inner + '$2'
+      );
 
       template = template.replace('</deck-stage>', slide4 + slide5 + '</deck-stage>' + playOnSlideChange);
     })();
